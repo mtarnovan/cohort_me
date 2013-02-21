@@ -6,11 +6,11 @@ module CohortMe
 
     start_from_interval = options[:start_from_interval] || 12
     interval_name = options[:period] || "weeks"
-    activation_class = options[:activation_class] 
+    activation_class = options[:activation_class]
     #activation_table_name = ActiveModel::Naming.plural(activation_class)
     activation_table_name = activation_class.table_name
     activation_user_id = options[:activation_user_id] || "user_id"
-    activation_conditions = options[:activation_conditions] 
+    activation_conditions = options[:activation_conditions]
 
     activity_class = options[:activity_class] || activation_class
     #activity_table_name = ActiveModel::Naming.plural(activity_class)
@@ -39,7 +39,7 @@ module CohortMe
     end
 
     if %(mysql mysql2).include?(ActiveRecord::Base.connection.instance_values["config"][:adapter])
-    
+
       select_sql = "#{activity_table_name}.#{activity_user_id}, #{activity_table_name}.created_at, cohort_date, FLOOR(TIMEDIFF(#{activity_table_name}.created_at, cohort_date)/#{time_conversion}) as periods_out"
     elsif ActiveRecord::Base.connection.instance_values["config"][:adapter] == "postgresql"
       select_sql = "#{activity_table_name}.#{activity_user_id}, #{activity_table_name}.created_at, cohort_date, FLOOR(extract(epoch from (#{activity_table_name}.created_at - cohort_date))/#{time_conversion}) as periods_out"
@@ -55,12 +55,12 @@ module CohortMe
     cohort_hash =  Hash[analysis.sort_by { |cohort, data| cohort }]
 
     table = {}
-    cohort_hash.each do |r| 
+    cohort_hash.each do |r|
 
       periods = []
       table[r[0]] = {}
 
-      cohort_hash.size.times{|i| periods << r[1].count{|d| d.periods_out.to_i == i} if r[1]} 
+      cohort_hash.size.times{|i| periods << r[1].count{|d| d.periods_out.to_i == i} if r[1]}
 
       table[r[0]][:count] = periods
       table[r[0]][:data] = r[1]
@@ -74,7 +74,7 @@ module CohortMe
   def self.convert_to_cohort_date(datetime, interval)
     if interval == "weeks"
       return datetime.at_beginning_of_week.to_date
-      
+
     elsif interval == "days"
       return Date.parse(datetime.strftime("%Y-%m-%d"))
 
